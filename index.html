@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatBot - KI Assistent</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="chat-box">
+            <div class="chat-header">
+                <h1>🤖 ChatBot Assistant</h1>
+                <p>Stellt mir eine Frage!</p>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot">
+                    <p>Hallo! Ich bin dein KI-Assistent. Wie kann ich dir helfen? 👋</p>
+                </div>
+            </div>
+            
+            <div class="chat-input-area">
+                <input 
+                    type="text" 
+                    id="userInput" 
+                    placeholder="Schreib deine Frage hier..." 
+                    onkeypress="handleKeyPress(event)"
+                >
+                <button onclick="sendMessage()">Senden ➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
