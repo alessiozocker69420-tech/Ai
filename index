@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body { background-color: #343541; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+
+        /* Chat Container */
+        .chat-container {
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            background: #343541;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #4d4d4f;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        /* Nachrichtenbereich */
+        #chat-window {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            color: #ececf1;
+        }
+
+        .message {
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            line-height: 1.5;
+            max-width: 85%;
+        }
+
+        .user { background-color: #444654; align-self: flex-end; margin-left: auto; border: 1px solid #565869; }
+        .bot { background-color: transparent; align-self: flex-start; }
+
+        /* Eingabebereich */
+        .input-area {
+            padding: 20px;
+            background: linear-gradient(180deg, rgba(52,53,65,0), #343541 50%);
+        }
+
+        .input-box {
+            position: relative;
+            display: flex;
+            background: #40414f;
+            border-radius: 10px;
+            border: 1px solid #565869;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 15px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        button {
+            background: transparent;
+            border: none;
+            color: #10a37f;
+            padding: 0 15px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        button:hover { color: #1a7f64; }
+
+        /* Scrollbar Styling */
+        #chat-window::-webkit-scrollbar { width: 8px; }
+        #chat-window::-webkit-scrollbar-thumb { background: #565869; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div id="chat-window">
+        <div class="message bot">Hallo! Ich bin dein KI-Assistent. Wie kann ich dir heute helfen?</div>
+    </div>
+    
+    <div class="input-area">
+        <div class="input-box">
+            <input type="text" id="userInput" placeholder="Schreibe eine Nachricht..." onkeypress="if(event.key==='Enter') sendMessage()">
+            <button onclick="sendMessage()">➤</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function sendMessage() {
+        const input = document.getElementById('userInput');
+        const window = document.getElementById('chat-window');
+        const text = input.value.trim();
+
+        // WICHTIG: Diesen Platzhalter lassen, wenn du es auf GitHub hochlädst!
+        const apiKey = "DEIN_OPENAI_KEY_ODER_PLACEHOLDER"; 
+
+        if (!text) return;
+
+        // User Nachricht anzeigen
+        window.innerHTML += `<div class="message user">${text}</div>`;
+        input.value = '';
+        window.scrollTop = window.scrollHeight;
+
+        try {
+            const response = await fetch("https://openai.com", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: "gpt-3.5-turbo",
+                    messages: [{ role: "user", content: text }]
+                })
+            });
+
+            const data = await response.json();
+            
+            if (data.choices) {
+                const reply = data.choices[0].message.content;
+                window.innerHTML += `<div class="message bot">${reply}</div>`;
+            } else {
+                throw new Error("API Fehler");
+            }
+        } catch (error) {
+            window.innerHTML += `<div class="message bot" style="color: #ff4a4a;">Fehler: Verbindung fehlgeschlagen oder Key ungültig.</div>`;
+        }
+        window.scrollTop = window.scrollHeight;
+    }
+</script>
+
+</body>
+</html>
