@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KI Chatbot</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 10px;
+    }
+
+    .chat-container {
+      width: 100%;
+      max-width: 600px;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      height: 700px;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 25px;
+      border-radius: 15px 15px 0 0;
+      text-align: center;
+    }
+
+    .chat-header h1 {
+      font-size: 28px;
+      margin-bottom: 5px;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: #f8f9fa;
+    }
+
+    .message-wrapper {
+      display: flex;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .message {
+      padding: 12px 16px;
+      border-radius: 12px;
+      max-width: 70%;
+      word-wrap: break-word;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .user-message-wrapper {
+      justify-content: flex-end;
+    }
+
+    .user-message {
+      background: #667eea;
+      color: white;
+    }
+
+    .bot-message-wrapper {
+      justify-content: flex-start;
+    }
+
+    .bot-message {
+      background: white;
+      color: #333;
+      border: 1px solid #e0e0e0;
+    }
+
+    .chat-input-area {
+      display: flex;
+      gap: 10px;
+      padding: 15px;
+      border-top: 1px solid #e0e0e0;
+      background: white;
+    }
+
+    input {
+      flex: 1;
+      padding: 12px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 25px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    button {
+      padding: 12px 25px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #764ba2;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .loading {
+      font-style: italic;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <h1>🤖 KI Chatbot</h1>
+      <p>Powered by OpenAI</p>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+      <div class="message-wrapper bot-message-wrapper">
+        <div class="message bot-message">
+          Hallo! 👋 Wie kann ich dir helfen?
+        </div>
+      </div>
+    </div>
+    <div class="chat-input-area">
+      <input 
+        type="text" 
+        id="userInput" 
+        placeholder="Schreib eine Nachricht..." 
+        onkeypress="handleKeyPress(event)"
+        autocomplete="off"
+      >
+      <button id="sendBtn" onclick="sendMessage()">Senden</button>
+    </div>
+  </div>
+
+  <script>
+    const chatMessages = document.getElementById('chatMessages');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    async function sendMessage() {
+      const message = userInput.value.trim();
+
+      if (!message) return;
+
+      userInput.disabled = true;
+      sendBtn.disabled = true;
+
+      // User-Nachricht anzeigen
+      displayMessage(message, 'user');
+      userInput.value = '';
+
+      // Loading-Nachricht
+      displayMessage('Antworte...', 'bot loading');
+
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Loading entfernen
+        removeLastMessage();
+        
+        // Bot-Antwort anzeigen
+        displayMessage(data.reply, 'bot');
+      } catch (error) {
+        removeLastMessage();
+        displayMessage('❌ Fehler! Überprüfe deinen API-Key.', 'bot');
+        console.error('Fehler:', error);
+      } finally {
+        userInput.disabled = false;
+        sendBtn.disabled = false;
+        userInput.focus();
+      }
+    }
+
+    function displayMessage(text, sender) {
+      const messageWrapper = document.createElement('div');
+      messageWrapper.className = `message-wrapper ${sender}-message-wrapper`;
+
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${sender}-message`;
+      messageDiv.textContent = text;
+
+      messageWrapper.appendChild(messageDiv);
+      chatMessages.appendChild(messageWrapper);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function removeLastMessage() {
+      chatMessages.lastChild.remove();
+    }
+
+    function handleKeyPress(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        sendMessage();
+      }
+    }
+
+    userInput.focus();
+  </script>
+</body>
+</html>
